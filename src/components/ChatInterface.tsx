@@ -1,5 +1,6 @@
-
 import React, { useState } from 'react';
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
+import { AppSidebar } from './AppSidebar';
 import AgentButton from './AgentButton';
 import ChatArea from './ChatArea';
 
@@ -26,6 +27,14 @@ const ChatInterface = () => {
     4: [],
     5: []
   });
+  const [conversationHistory, setConversationHistory] = useState<Array<{
+    id: string;
+    title: string;
+    agentId: number;
+    lastMessage: string;
+    timestamp: Date;
+    messages: Message[];
+  }>>([]);
 
   const agentsData: AgentData[] = [
     {
@@ -62,6 +71,33 @@ const ChatInterface = () => {
 
   const handleAgentSelect = (agentNumber: number) => {
     setSelectedAgent(agentNumber);
+  };
+
+  const saveConversation = (messages: Message[], agentId: number) => {
+    if (messages.length === 0) return;
+    
+    const conversationId = `${agentId}-${Date.now()}`;
+    const lastMessage = messages[messages.length - 1];
+    const title = messages[0]?.content.substring(0, 30) + '...' || 'Nova conversa';
+    
+    const newConversation = {
+      id: conversationId,
+      title,
+      agentId,
+      lastMessage: lastMessage.content.substring(0, 50) + '...',
+      timestamp: new Date(),
+      messages: [...messages]
+    };
+
+    setConversationHistory(prev => [newConversation, ...prev].slice(0, 20)); // Keep only last 20 conversations
+  };
+
+  const loadConversation = (conversation: any) => {
+    setSelectedAgent(conversation.agentId);
+    setConversations(prev => ({
+      ...prev,
+      [conversation.agentId]: conversation.messages
+    }));
   };
 
   const handleSendMessage = async (message: string) => {
@@ -105,10 +141,15 @@ const ChatInterface = () => {
         timestamp: new Date()
       };
 
+      const updatedMessages = [...conversations[selectedAgent], userMessage, agentMessage];
+      
       setConversations(prev => ({
         ...prev,
-        [selectedAgent]: [...prev[selectedAgent], agentMessage]
+        [selectedAgent]: updatedMessages
       }));
+
+      // Save conversation to history
+      saveConversation(updatedMessages, selectedAgent);
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
       
@@ -120,43 +161,58 @@ const ChatInterface = () => {
         timestamp: new Date()
       };
 
+      const updatedMessages = [...conversations[selectedAgent], userMessage, errorMessage];
+      
       setConversations(prev => ({
         ...prev,
-        [selectedAgent]: [...prev[selectedAgent], errorMessage]
+        [selectedAgent]: updatedMessages
       }));
+
+      saveConversation(updatedMessages, selectedAgent);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#1e1e1e] flex flex-col">
-      {/* Header com botões dos agentes */}
-      <header className="p-6 border-b border-[#2a2a2a]">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 justify-items-center">
-            {agentsData.map((agent) => (
-              <AgentButton
-                key={agent.id}
-                agentNumber={agent.id}
-                title={agent.title}
-                description={agent.description}
-                icon={agent.icon}
-                isSelected={selectedAgent === agent.id}
-                onClick={() => handleAgentSelect(agent.id)}
-              />
-            ))}
-          </div>
-        </div>
-      </header>
-
-      {/* Área principal do chat */}
-      <main className="flex-1 flex flex-col max-w-4xl mx-auto w-full">
-        <ChatArea
-          messages={conversations[selectedAgent]}
-          agentNumber={selectedAgent}
-          onSendMessage={handleSendMessage}
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-[#1e1e1e]">
+        <AppSidebar 
+          conversationHistory={conversationHistory}
+          onLoadConversation={loadConversation}
+          currentAgent={selectedAgent}
         />
-      </main>
-    </div>
+        <SidebarInset className="flex-1">
+          <div className="min-h-screen bg-[#1e1e1e] flex flex-col">
+            {/* Header com botões dos agentes */}
+            <header className="p-6 border-b border-[#2a2a2a]">
+              <div className="max-w-7xl mx-auto">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 justify-items-center">
+                  {agentsData.map((agent) => (
+                    <AgentButton
+                      key={agent.id}
+                      agentNumber={agent.id}
+                      title={agent.title}
+                      description={agent.description}
+                      icon={agent.icon}
+                      isSelected={selectedAgent === agent.id}
+                      onClick={() => handleAgentSelect(agent.id)}
+                    />
+                  ))}
+                </div>
+              </div>
+            </header>
+
+            {/* Área principal do chat */}
+            <main className="flex-1 flex flex-col max-w-4xl mx-auto w-full">
+              <ChatArea
+                messages={conversations[selectedAgent]}
+                agentNumber={selectedAgent}
+                onSendMessage={handleSendMessage}
+              />
+            </main>
+          </div>
+        </SidebarInset>
+      </div>
+    </SidebarProvider>
   );
 };
 
