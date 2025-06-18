@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { AppSidebar } from './AppSidebar';
 import AgentButton from './AgentButton';
 import ChatArea from './ChatArea';
 import { Button } from '@/components/ui/button';
-import { History } from 'lucide-react';
+import { History, ArrowLeft } from 'lucide-react';
 
 export interface Message {
   id: string;
@@ -75,6 +74,10 @@ const ChatInterface = () => {
 
   const handleAgentSelect = (agentNumber: number) => {
     setSelectedAgent(agentNumber);
+  };
+
+  const handleBackToAgents = () => {
+    setSelectedAgent(null);
   };
 
   const saveConversation = (messages: Message[], agentId: number) => {
@@ -183,17 +186,30 @@ const ChatInterface = () => {
         />
         <SidebarInset className="flex-1">
           <div className="min-h-screen bg-[#1e1e1e] flex flex-col">
-            {/* Header com botão do histórico */}
+            {/* Header com botões de navegação */}
             <header className="p-4 border-b border-[#2a2a2a] flex justify-between items-center">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSidebarOpen(true)}
-                className="text-gray-400 hover:text-white hover:bg-[#2a2a2a]"
-              >
-                <History className="h-4 w-4 mr-2" />
-                Histórico
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSidebarOpen(!sidebarOpen)}
+                  className="text-gray-400 hover:text-white hover:bg-[#2a2a2a]"
+                >
+                  <History className="h-4 w-4 mr-2" />
+                  Histórico
+                </Button>
+                {selectedAgent && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleBackToAgents}
+                    className="text-gray-400 hover:text-white hover:bg-[#2a2a2a]"
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Voltar
+                  </Button>
+                )}
+              </div>
               {selectedAgent && (
                 <div className="text-gray-400 text-sm">
                   Conversando com {agentsData.find(a => a.id === selectedAgent)?.title}
@@ -213,7 +229,7 @@ const ChatInterface = () => {
                     Selecione o agente ideal para sua necessidade
                   </p>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 justify-items-center">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
                     {agentsData.map((agent) => (
                       <AgentButton
                         key={agent.id}

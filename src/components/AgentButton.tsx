@@ -23,7 +23,7 @@ const AgentButton: React.FC<AgentButtonProps> = ({
       onClick={onClick}
       className={`
         agent-button p-6 rounded-2xl font-medium text-left
-        shadow-xl backdrop-blur-sm min-w-[280px] h-[140px]
+        shadow-xl backdrop-blur-sm w-full min-h-[140px] md:min-w-[280px] md:h-[140px]
         flex flex-col justify-between
         ${isSelected 
           ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-blue-600/40' 
