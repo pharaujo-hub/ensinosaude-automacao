@@ -1,8 +1,11 @@
+
 import React, { useState } from 'react';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { AppSidebar } from './AppSidebar';
 import AgentButton from './AgentButton';
 import ChatArea from './ChatArea';
+import { Button } from '@/components/ui/button';
+import { History } from 'lucide-react';
 
 export interface Message {
   id: string;
@@ -19,7 +22,8 @@ interface AgentData {
 }
 
 const ChatInterface = () => {
-  const [selectedAgent, setSelectedAgent] = useState<number>(1);
+  const [selectedAgent, setSelectedAgent] = useState<number | null>(null); // Começa sem agente selecionado
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [conversations, setConversations] = useState<Record<number, Message[]>>({
     1: [],
     2: [],
@@ -89,7 +93,7 @@ const ChatInterface = () => {
       messages: [...messages]
     };
 
-    setConversationHistory(prev => [newConversation, ...prev].slice(0, 20)); // Keep only last 20 conversations
+    setConversationHistory(prev => [newConversation, ...prev].slice(0, 20));
   };
 
   const loadConversation = (conversation: any) => {
@@ -101,6 +105,8 @@ const ChatInterface = () => {
   };
 
   const handleSendMessage = async (message: string) => {
+    if (!selectedAgent) return;
+
     const userMessage: Message = {
       id: Date.now().toString(),
       content: message,
@@ -108,14 +114,12 @@ const ChatInterface = () => {
       timestamp: new Date()
     };
 
-    // Adiciona a mensagem do usuário
     setConversations(prev => ({
       ...prev,
       [selectedAgent]: [...prev[selectedAgent], userMessage]
     }));
 
     try {
-      // Simula chamada para o backend n8n
       const response = await fetch(`/webhook/agent${selectedAgent}`, {
         method: 'POST',
         headers: {
@@ -130,7 +134,6 @@ const ChatInterface = () => {
         const data = await response.json();
         agentResponse = data.response || `Resposta do Agente ${selectedAgent}: ${message}`;
       } else {
-        // Resposta simulada para demonstração
         agentResponse = `Agente ${selectedAgent}: Obrigado pela sua mensagem "${message}". Como posso ajudá-lo hoje?`;
       }
 
@@ -148,12 +151,10 @@ const ChatInterface = () => {
         [selectedAgent]: updatedMessages
       }));
 
-      // Save conversation to history
       saveConversation(updatedMessages, selectedAgent);
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
       
-      // Resposta de erro
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         content: 'Desculpe, ocorreu um erro ao processar sua mensagem. Tente novamente.',
@@ -173,42 +174,70 @@ const ChatInterface = () => {
   };
 
   return (
-    <SidebarProvider>
+    <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
       <div className="min-h-screen flex w-full bg-[#1e1e1e]">
         <AppSidebar 
           conversationHistory={conversationHistory}
           onLoadConversation={loadConversation}
-          currentAgent={selectedAgent}
+          currentAgent={selectedAgent || 1}
         />
         <SidebarInset className="flex-1">
           <div className="min-h-screen bg-[#1e1e1e] flex flex-col">
-            {/* Header com botões dos agentes */}
-            <header className="p-6 border-b border-[#2a2a2a]">
-              <div className="max-w-7xl mx-auto">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 justify-items-center">
-                  {agentsData.map((agent) => (
-                    <AgentButton
-                      key={agent.id}
-                      agentNumber={agent.id}
-                      title={agent.title}
-                      description={agent.description}
-                      icon={agent.icon}
-                      isSelected={selectedAgent === agent.id}
-                      onClick={() => handleAgentSelect(agent.id)}
-                    />
-                  ))}
+            {/* Header com botão do histórico */}
+            <header className="p-4 border-b border-[#2a2a2a] flex justify-between items-center">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSidebarOpen(true)}
+                className="text-gray-400 hover:text-white hover:bg-[#2a2a2a]"
+              >
+                <History className="h-4 w-4 mr-2" />
+                Histórico
+              </Button>
+              {selectedAgent && (
+                <div className="text-gray-400 text-sm">
+                  Conversando com {agentsData.find(a => a.id === selectedAgent)?.title}
                 </div>
-              </div>
+              )}
             </header>
 
-            {/* Área principal do chat */}
-            <main className="flex-1 flex flex-col max-w-4xl mx-auto w-full">
-              <ChatArea
-                messages={conversations[selectedAgent]}
-                agentNumber={selectedAgent}
-                onSendMessage={handleSendMessage}
-              />
-            </main>
+            {/* Tela inicial ou área de chat */}
+            {!selectedAgent ? (
+              // Tela inicial com seleção de agentes
+              <main className="flex-1 flex items-center justify-center p-6">
+                <div className="max-w-6xl mx-auto text-center">
+                  <h1 className="text-4xl font-bold text-white mb-4">
+                    Escolha seu Assistente IA
+                  </h1>
+                  <p className="text-gray-400 mb-12 text-lg">
+                    Selecione o agente ideal para sua necessidade
+                  </p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 justify-items-center">
+                    {agentsData.map((agent) => (
+                      <AgentButton
+                        key={agent.id}
+                        agentNumber={agent.id}
+                        title={agent.title}
+                        description={agent.description}
+                        icon={agent.icon}
+                        isSelected={false}
+                        onClick={() => handleAgentSelect(agent.id)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </main>
+            ) : (
+              // Área do chat quando um agente está selecionado
+              <main className="flex-1 flex flex-col max-w-4xl mx-auto w-full">
+                <ChatArea
+                  messages={conversations[selectedAgent]}
+                  agentNumber={selectedAgent}
+                  onSendMessage={handleSendMessage}
+                />
+              </main>
+            )}
           </div>
         </SidebarInset>
       </div>
