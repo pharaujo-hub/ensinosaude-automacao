@@ -10,6 +10,13 @@ export interface Message {
   timestamp: Date;
 }
 
+interface AgentData {
+  id: number;
+  title: string;
+  description: string;
+  icon: string;
+}
+
 const ChatInterface = () => {
   const [selectedAgent, setSelectedAgent] = useState<number>(1);
   const [conversations, setConversations] = useState<Record<number, Message[]>>({
@@ -19,6 +26,39 @@ const ChatInterface = () => {
     4: [],
     5: []
   });
+
+  const agentsData: AgentData[] = [
+    {
+      id: 1,
+      title: "Assistente Geral",
+      description: "Seu assistente para dúvidas gerais, conversas e tarefas do dia a dia.",
+      icon: "🤖"
+    },
+    {
+      id: 2,
+      title: "Especialista Técnico",
+      description: "Especializado em programação, tecnologia e soluções técnicas.",
+      icon: "⚡"
+    },
+    {
+      id: 3,
+      title: "Consultor Criativo",
+      description: "Ideal para brainstorming, ideias criativas e projetos inovadores.",
+      icon: "🎨"
+    },
+    {
+      id: 4,
+      title: "Analista de Dados",
+      description: "Focado em análise, relatórios e interpretação de informações.",
+      icon: "📊"
+    },
+    {
+      id: 5,
+      title: "Mentor Pessoal",
+      description: "Orientação pessoal, desenvolvimento e crescimento profissional.",
+      icon: "🌟"
+    }
+  ];
 
   const handleAgentSelect = (agentNumber: number) => {
     setSelectedAgent(agentNumber);
@@ -90,15 +130,18 @@ const ChatInterface = () => {
   return (
     <div className="min-h-screen bg-[#1e1e1e] flex flex-col">
       {/* Header com botões dos agentes */}
-      <header className="p-4 border-b border-[#2a2a2a]">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex flex-wrap gap-3 justify-center">
-            {[1, 2, 3, 4, 5].map((agentNumber) => (
+      <header className="p-6 border-b border-[#2a2a2a]">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 justify-items-center">
+            {agentsData.map((agent) => (
               <AgentButton
-                key={agentNumber}
-                agentNumber={agentNumber}
-                isSelected={selectedAgent === agentNumber}
-                onClick={() => handleAgentSelect(agentNumber)}
+                key={agent.id}
+                agentNumber={agent.id}
+                title={agent.title}
+                description={agent.description}
+                icon={agent.icon}
+                isSelected={selectedAgent === agent.id}
+                onClick={() => handleAgentSelect(agent.id)}
               />
             ))}
           </div>
