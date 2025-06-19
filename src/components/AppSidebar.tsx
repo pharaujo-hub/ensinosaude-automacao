@@ -53,22 +53,20 @@ export function AppSidebar({ conversationHistory, onLoadConversation, currentAge
 
   const getAgentName = (agentId: number) => {
     const agentNames = {
-      1: 'Geral',
-      2: 'Técnico',
-      3: 'Criativo',
-      4: 'Dados',
-      5: 'Mentor'
+      1: 'Reels',
+      2: 'Raiz',
+      3: 'Aquecimento',
+      4: 'Criativos'
     };
     return agentNames[agentId as keyof typeof agentNames] || `Agente ${agentId}`;
   };
 
   const getAgentIcon = (agentId: number) => {
     const agentIcons = {
-      1: '🤖',
-      2: '⚡',
-      3: '🎨',
-      4: '📊',
-      5: '🌟'
+      1: '🎬',
+      2: '🌱',
+      3: '🔥',
+      4: '🎨'
     };
     return agentIcons[agentId as keyof typeof agentIcons] || '🤖';
   };

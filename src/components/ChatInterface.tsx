@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { AppSidebar } from './AppSidebar';
@@ -18,17 +19,17 @@ interface AgentData {
   title: string;
   description: string;
   icon: string;
+  webhookUrl: string;
 }
 
 const ChatInterface = () => {
-  const [selectedAgent, setSelectedAgent] = useState<number | null>(null); // Começa sem agente selecionado
+  const [selectedAgent, setSelectedAgent] = useState<number | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [conversations, setConversations] = useState<Record<number, Message[]>>({
     1: [],
     2: [],
     3: [],
-    4: [],
-    5: []
+    4: []
   });
   const [conversationHistory, setConversationHistory] = useState<Array<{
     id: string;
@@ -42,33 +43,31 @@ const ChatInterface = () => {
   const agentsData: AgentData[] = [
     {
       id: 1,
-      title: "Assistente Geral",
-      description: "Seu assistente para dúvidas gerais, conversas e tarefas do dia a dia.",
-      icon: "🤖"
+      title: "Gerador de Reels",
+      description: "Especializado em criar roteiros e ideias para reels virais no Instagram.",
+      icon: "🎬",
+      webhookUrl: "https://n8n-n8n-start.u6yj1s.easypanel.host/webhook/gerador-reels"
     },
     {
       id: 2,
-      title: "Especialista Técnico",
-      description: "Especializado em programação, tecnologia e soluções técnicas.",
-      icon: "⚡"
+      title: "Gerador Raiz",
+      description: "Focado em conteúdo autêntico e conectado com as raízes da marca.",
+      icon: "🌱",
+      webhookUrl: "https://n8n-n8n-start.u6yj1s.easypanel.host/webhook/gerador-raiz"
     },
     {
       id: 3,
-      title: "Consultor Criativo",
-      description: "Ideal para brainstorming, ideias criativas e projetos inovadores.",
-      icon: "🎨"
+      title: "Gerador Aquecimento",
+      description: "Cria conteúdo para aquecer a audiência antes de vendas e lançamentos.",
+      icon: "🔥",
+      webhookUrl: "https://n8n-n8n-start.u6yj1s.easypanel.host/webhook/gerador-aquecimento"
     },
     {
       id: 4,
-      title: "Analista de Dados",
-      description: "Focado em análise, relatórios e interpretação de informações.",
-      icon: "📊"
-    },
-    {
-      id: 5,
-      title: "Mentor Pessoal",
-      description: "Orientação pessoal, desenvolvimento e crescimento profissional.",
-      icon: "🌟"
+      title: "Gerador de Criativos",
+      description: "Desenvolve peças criativas inovadoras para campanhas publicitárias.",
+      icon: "🎨",
+      webhookUrl: "https://n8n-n8n-start.u6yj1s.easypanel.host/webhook/gerador-criativos"
     }
   ];
 
@@ -110,6 +109,9 @@ const ChatInterface = () => {
   const handleSendMessage = async (message: string) => {
     if (!selectedAgent) return;
 
+    const selectedAgentData = agentsData.find(agent => agent.id === selectedAgent);
+    if (!selectedAgentData) return;
+
     const userMessage: Message = {
       id: Date.now().toString(),
       content: message,
@@ -123,7 +125,10 @@ const ChatInterface = () => {
     }));
 
     try {
-      const response = await fetch(`/webhook/agent${selectedAgent}`, {
+      console.log(`Enviando mensagem para ${selectedAgentData.title}:`, message);
+      console.log(`URL do webhook: ${selectedAgentData.webhookUrl}`);
+
+      const response = await fetch(selectedAgentData.webhookUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -135,9 +140,11 @@ const ChatInterface = () => {
       
       if (response.ok) {
         const data = await response.json();
-        agentResponse = data.response || `Resposta do Agente ${selectedAgent}: ${message}`;
+        console.log('Resposta do n8n:', data);
+        agentResponse = data.response || data.message || `${selectedAgentData.title}: Obrigado pela sua mensagem "${message}". Como posso ajudá-lo hoje?`;
       } else {
-        agentResponse = `Agente ${selectedAgent}: Obrigado pela sua mensagem "${message}". Como posso ajudá-lo hoje?`;
+        console.error('Erro na resposta do webhook:', response.status, response.statusText);
+        agentResponse = `${selectedAgentData.title}: Obrigado pela sua mensagem "${message}". Como posso ajudá-lo hoje?`;
       }
 
       const agentMessage: Message = {
@@ -156,11 +163,11 @@ const ChatInterface = () => {
 
       saveConversation(updatedMessages, selectedAgent);
     } catch (error) {
-      console.error('Erro ao enviar mensagem:', error);
+      console.error('Erro ao enviar mensagem para o webhook:', error);
       
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: 'Desculpe, ocorreu um erro ao processar sua mensagem. Tente novamente.',
+        content: 'Desculpe, ocorreu um erro ao processar sua mensagem. Verifique sua conexão e tente novamente.',
         sender: 'agent',
         timestamp: new Date()
       };
@@ -223,13 +230,13 @@ const ChatInterface = () => {
               <main className="flex-1 flex items-center justify-center p-6">
                 <div className="max-w-6xl mx-auto text-center">
                   <h1 className="text-4xl font-bold text-white mb-4">
-                    Escolha seu Assistente IA
+                    Escolha seu Gerador de Conteúdo IA
                   </h1>
                   <p className="text-gray-400 mb-12 text-lg">
-                    Selecione o agente ideal para sua necessidade
+                    Selecione o agente ideal para criar seu conteúdo
                   </p>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-6">
                     {agentsData.map((agent) => (
                       <AgentButton
                         key={agent.id}
