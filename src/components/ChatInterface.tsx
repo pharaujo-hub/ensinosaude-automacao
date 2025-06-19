@@ -104,6 +104,7 @@ const ChatInterface = () => {
       ...prev,
       [conversation.agentId]: conversation.messages
     }));
+    setSidebarOpen(false);
   };
 
   const handleSendMessage = async (message: string) => {
@@ -193,18 +194,20 @@ const ChatInterface = () => {
         />
         <SidebarInset className="flex-1">
           <div className="min-h-screen bg-[#1e1e1e] flex flex-col">
-            {/* Header com botões de navegação */}
+            {/* Header com botões reorganizados */}
             <header className="p-4 border-b border-[#2a2a2a] flex justify-between items-center">
               <div className="flex items-center gap-2">
+                {/* Botão de histórico sempre visível, apenas com ícone */}
                 <Button
                   variant="ghost"
-                  size="sm"
+                  size="icon"
                   onClick={() => setSidebarOpen(!sidebarOpen)}
-                  className="text-gray-400 hover:text-white hover:bg-[#2a2a2a]"
+                  className="text-gray-400 hover:text-white hover:bg-[#2a2a2a] h-9 w-9"
                 >
-                  <History className="h-4 w-4 mr-2" />
-                  Histórico
+                  <History className="h-4 w-4" />
                 </Button>
+                
+                {/* Botão voltar apenas quando agente está selecionado */}
                 {selectedAgent && (
                   <Button
                     variant="ghost"
@@ -217,9 +220,16 @@ const ChatInterface = () => {
                   </Button>
                 )}
               </div>
+              
+              {/* Nome do agente quando selecionado */}
               {selectedAgent && (
-                <div className="text-gray-400 text-sm">
-                  Conversando com {agentsData.find(a => a.id === selectedAgent)?.title}
+                <div className="text-gray-400 text-sm flex items-center gap-2">
+                  <span className="text-lg">
+                    {agentsData.find(a => a.id === selectedAgent)?.icon}
+                  </span>
+                  <span className="hidden sm:inline">
+                    {agentsData.find(a => a.id === selectedAgent)?.title}
+                  </span>
                 </div>
               )}
             </header>
