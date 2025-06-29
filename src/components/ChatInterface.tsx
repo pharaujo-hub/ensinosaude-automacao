@@ -148,58 +148,6 @@ const ChatInterface = () => {
     setSidebarOpen(false);
   };
 
-  // Função para extrair a resposta do webhook baseado no formato retornado
-  const extractWebhookResponse = (data: any): string => {
-    console.log('Dados recebidos do webhook:', data);
-    
-    // Se for um array, pegar o primeiro item
-    if (Array.isArray(data) && data.length > 0) {
-      const firstItem = data[0];
-      
-      // Verificar se tem a propriedade 'output'
-      if (firstItem.output) {
-        return firstItem.output;
-      }
-      
-      // Verificar outras propriedades possíveis
-      if (firstItem.response) {
-        return firstItem.response;
-      }
-      
-      if (firstItem.message) {
-        return firstItem.message;
-      }
-      
-      // Se for string diretamente
-      if (typeof firstItem === 'string') {
-        return firstItem;
-      }
-    }
-    
-    // Se não for array, verificar propriedades diretamente
-    if (data && typeof data === 'object') {
-      if (data.output) {
-        return data.output;
-      }
-      
-      if (data.response) {
-        return data.response;
-      }
-      
-      if (data.message) {
-        return data.message;
-      }
-    }
-    
-    // Se for string diretamente
-    if (typeof data === 'string') {
-      return data;
-    }
-    
-    // Fallback: tentar converter para string
-    return JSON.stringify(data);
-  };
-
   const handleSendMessage = async (message: string) => {
     if (!selectedAgent) return;
 
@@ -240,18 +188,92 @@ const ChatInterface = () => {
       let agentResponse = 'Desculpe, não consegui processar sua mensagem no momento.';
       
       if (response.ok) {
-        const data = await response.json();
-        console.log('Resposta completa do n8n:', data);
-        
-        // Usar a nova função para extrair a resposta
-        agentResponse = extractWebhookResponse(data);
-        
-        console.log('Resposta extraída:', agentResponse);
+        try {
+          // Primeiro, tenta fazer parse como JSON
+          const data = await response.json();
+          console.log('Resposta completa do n8n (JSON):', data);
+          
+          // Verifica se é um array e pega o primeiro item
+          if (Array.isArray(data) && data.length > 0) {
+            const firstItem = data[0];
+            
+            // Verifica se tem a propriedade 'output'
+            if (firstItem.output !== undefined) {
+              agentResponse = String(firstItem.output);
+            }
+            // Verifica outras propriedades possíveis
+            else if (firstItem.response !== undefined) {
+              agentResponse = String(firstItem.response);
+            }
+            else if (firstItem.message !== undefined) {
+              agentResponse = String(firstItem.message);
+            }
+            // Se for string diretamente
+            else if (typeof firstItem === 'string') {
+              agentResponse = firstItem;
+            }
+            // Fallback: usar o objeto completo como string
+            else {
+              agentResponse = JSON.stringify(firstItem);
+            }
+          }
+          // Se não for array, verifica propriedades diretamente
+          else if (data && typeof data === 'object') {
+            if (data.output !== undefined) {
+              agentResponse = String(data.output);
+            }
+            else if (data.response !== undefined) {
+              agentResponse = String(data.response);
+            }
+            else if (data.message !== undefined) {
+              agentResponse = String(data.message);
+            }
+            else {
+              agentResponse = JSON.stringify(data);
+            }
+          }
+          // Se for string diretamente
+          else if (typeof data === 'string') {
+            agentResponse = data;
+          }
+          // Fallback final
+          else {
+            agentResponse = JSON.stringify(data);
+          }
+          
+        } catch (jsonError) {
+          // Se não conseguir fazer parse como JSON, tenta como texto
+          console.log('Resposta não é JSON válido, tentando como texto...');
+          try {
+            // Precisa fazer uma nova requisição pois o response já foi consumido
+            const textResponse = await fetch(selectedAgentData.webhookUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ 
+                message: message,
+                id: sessionId
+              })
+            });
+            
+            agentResponse = await textResponse.text();
+            console.log('Resposta como texto:', agentResponse);
+          } catch (textError) {
+            console.error('Erro ao obter resposta como texto:', textError);
+            agentResponse = 'Erro ao processar resposta do servidor.';
+          }
+        }
       } else {
         console.error('Erro na resposta do webhook:', response.status, response.statusText);
-        const errorText = await response.text();
-        console.error('Texto do erro:', errorText);
-        agentResponse = `Erro ao processar mensagem. Status: ${response.status}`;
+        try {
+          // Tenta obter a mensagem de erro exata do backend
+          const errorText = await response.text();
+          console.error('Texto do erro:', errorText);
+          agentResponse = errorText || `Erro ${response.status}: ${response.statusText}`;
+        } catch (errorParseError) {
+          agentResponse = `Erro ${response.status}: ${response.statusText}`;
+        }
       }
 
       const agentMessage: Message = {
@@ -274,7 +296,7 @@ const ChatInterface = () => {
       
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: 'Desculpe, ocorreu um erro ao processar sua mensagem. Verifique sua conexão e tente novamente.',
+        content: `Erro de conexão: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
         sender: 'agent',
         timestamp: new Date()
       };
