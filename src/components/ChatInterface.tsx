@@ -184,97 +184,111 @@ const ChatInterface = () => {
   };
 
   return (
-    <SidebarProvider open={sidebarOpen} onOpenChange={setSidebarOpen}>
-      <div className="min-h-screen flex w-full bg-[#1e1e1e]">
+    <div className="min-h-screen flex w-full bg-[#1e1e1e]">
+      {/* Sidebar - sempre renderizado */}
+      <div className={`
+        fixed inset-y-0 left-0 z-50 w-80 bg-[#1e1e1e] border-r border-[#2a2a2a] transform transition-transform duration-300 ease-in-out
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        md:relative md:translate-x-0 md:w-80
+        ${sidebarOpen ? 'md:block' : 'md:hidden'}
+      `}>
         <AppSidebar 
           conversationHistory={conversationHistory}
           onLoadConversation={loadConversation}
           currentAgent={selectedAgent || 1}
         />
-        <SidebarInset className="flex-1">
-          <div className="min-h-screen bg-[#1e1e1e] flex flex-col">
-            {/* Header com botões reorganizados */}
-            <header className="p-4 border-b border-[#2a2a2a] flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                {/* Botão de histórico sempre visível */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setSidebarOpen(!sidebarOpen)}
-                  className="text-gray-400 hover:text-white hover:bg-[#2a2a2a] flex items-center gap-2"
-                >
-                  <History className="h-4 w-4" />
-                  <span className="hidden sm:inline">Histórico</span>
-                </Button>
-                
-                {/* Botão voltar apenas quando agente está selecionado */}
-                {selectedAgent && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleBackToAgents}
-                    className="text-gray-400 hover:text-white hover:bg-[#2a2a2a]"
-                  >
-                    <ArrowLeft className="h-4 w-4 mr-2" />
-                    Voltar
-                  </Button>
-                )}
-              </div>
-              
-              {/* Nome do agente quando selecionado */}
-              {selectedAgent && (
-                <div className="text-gray-400 text-sm flex items-center gap-2">
-                  <span className="text-lg">
-                    {agentsData.find(a => a.id === selectedAgent)?.icon}
-                  </span>
-                  <span className="hidden sm:inline">
-                    {agentsData.find(a => a.id === selectedAgent)?.title}
-                  </span>
-                </div>
-              )}
-            </header>
+      </div>
 
-            {/* Tela inicial ou área de chat */}
-            {!selectedAgent ? (
-              // Tela inicial com seleção de agentes
-              <main className="flex-1 flex items-center justify-center p-6">
-                <div className="max-w-6xl mx-auto text-center">
-                  <h1 className="text-4xl font-bold text-white mb-4">
-                    Escolha seu Gerador de Conteúdo IA
-                  </h1>
-                  <p className="text-gray-400 mb-12 text-lg">
-                    Selecione o agente ideal para criar seu conteúdo
-                  </p>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-6">
-                    {agentsData.map((agent) => (
-                      <AgentButton
-                        key={agent.id}
-                        agentNumber={agent.id}
-                        title={agent.title}
-                        description={agent.description}
-                        icon={agent.icon}
-                        isSelected={false}
-                        onClick={() => handleAgentSelect(agent.id)}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </main>
-            ) : (
-              // Área do chat quando um agente está selecionado
-              <main className="flex-1 flex flex-col max-w-4xl mx-auto w-full">
-                <ChatArea
-                  messages={conversations[selectedAgent]}
-                  agentNumber={selectedAgent}
-                  onSendMessage={handleSendMessage}
-                />
-              </main>
+      {/* Overlay para mobile */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Conteúdo principal */}
+      <div className="flex-1 flex flex-col min-h-screen">
+        {/* Header */}
+        <header className="p-4 border-b border-[#2a2a2a] flex justify-between items-center bg-[#1e1e1e] relative z-30">
+          <div className="flex items-center gap-2">
+            {/* Botão de histórico */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="text-gray-400 hover:text-white hover:bg-[#2a2a2a] flex items-center gap-2"
+            >
+              <History className="h-4 w-4" />
+              <span className="hidden sm:inline">Histórico</span>
+            </Button>
+            
+            {/* Botão voltar apenas quando agente está selecionado */}
+            {selectedAgent && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleBackToAgents}
+                className="text-gray-400 hover:text-white hover:bg-[#2a2a2a]"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Voltar
+              </Button>
             )}
           </div>
-        </SidebarInset>
+          
+          {/* Nome do agente quando selecionado */}
+          {selectedAgent && (
+            <div className="text-gray-400 text-sm flex items-center gap-2">
+              <span className="text-lg">
+                {agentsData.find(a => a.id === selectedAgent)?.icon}
+              </span>
+              <span className="hidden sm:inline">
+                {agentsData.find(a => a.id === selectedAgent)?.title}
+              </span>
+            </div>
+          )}
+        </header>
+
+        {/* Conteúdo */}
+        {!selectedAgent ? (
+          // Tela inicial com seleção de agentes
+          <main className="flex-1 flex items-center justify-center p-6">
+            <div className="max-w-6xl mx-auto text-center">
+              <h1 className="text-4xl font-bold text-white mb-4">
+                Escolha seu Gerador de Conteúdo IA
+              </h1>
+              <p className="text-gray-400 mb-12 text-lg">
+                Selecione o agente ideal para criar seu conteúdo
+              </p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-6">
+                {agentsData.map((agent) => (
+                  <AgentButton
+                    key={agent.id}
+                    agentNumber={agent.id}
+                    title={agent.title}
+                    description={agent.description}
+                    icon={agent.icon}
+                    isSelected={false}
+                    onClick={() => handleAgentSelect(agent.id)}
+                  />
+                ))}
+              </div>
+            </div>
+          </main>
+        ) : (
+          // Área do chat quando um agente está selecionado
+          <main className="flex-1 flex flex-col max-w-4xl mx-auto w-full">
+            <ChatArea
+              messages={conversations[selectedAgent]}
+              agentNumber={selectedAgent}
+              onSendMessage={handleSendMessage}
+            />
+          </main>
+        )}
       </div>
-    </SidebarProvider>
+    </div>
   );
 };
 

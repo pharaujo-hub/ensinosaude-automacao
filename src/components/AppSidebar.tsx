@@ -1,16 +1,5 @@
 import React from 'react';
 import { History, MessageSquare, Trash2 } from 'lucide-react';
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-} from '@/components/ui/sidebar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface ConversationHistoryItem {
@@ -70,58 +59,57 @@ export function AppSidebar({ conversationHistory, onLoadConversation, currentAge
   };
 
   return (
-    <Sidebar className="border-r border-[#2a2a2a] bg-[#1e1e1e]">
-      <SidebarHeader className="border-b border-[#2a2a2a] p-4">
+    <div className="h-full flex flex-col bg-[#1e1e1e] border-r border-[#2a2a2a]">
+      {/* Header */}
+      <div className="border-b border-[#2a2a2a] p-4">
         <div className="flex items-center gap-2">
           <History className="h-5 w-5 text-gray-400" />
           <span className="font-semibold text-gray-200">Histórico</span>
         </div>
-      </SidebarHeader>
+      </div>
       
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-gray-400 text-xs uppercase tracking-wide">
+      {/* Content */}
+      <div className="flex-1 overflow-hidden">
+        <div className="p-4">
+          <h3 className="text-gray-400 text-xs uppercase tracking-wide mb-4">
             Conversas Recentes
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <ScrollArea className="h-[calc(100vh-200px)]">
-              <SidebarMenu>
-                {conversationHistory.length === 0 ? (
-                  <div className="p-4 text-center text-gray-500 text-sm">
-                    <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    Nenhuma conversa ainda
-                  </div>
-                ) : (
-                  conversationHistory.map((conversation) => (
-                    <SidebarMenuItem key={conversation.id}>
-                      <SidebarMenuButton
-                        onClick={() => onLoadConversation(conversation)}
-                        className="flex flex-col items-start p-3 h-auto hover:bg-[#2a2a2a] rounded-lg group w-full text-left"
-                      >
-                        <div className="flex items-center gap-2 w-full mb-1">
-                          <span className="text-sm">{getAgentIcon(conversation.agentId)}</span>
-                          <span className="text-xs text-gray-400 bg-gray-700 px-2 py-0.5 rounded-full">
-                            {getAgentName(conversation.agentId)}
-                          </span>
-                          <span className="text-xs text-gray-500 ml-auto">
-                            {formatTimestamp(conversation.timestamp)}
-                          </span>
-                        </div>
-                        <h4 className="text-sm font-medium text-gray-200 truncate w-full text-left">
-                          {conversation.title}
-                        </h4>
-                        <p className="text-xs text-gray-500 truncate w-full text-left mt-1">
-                          {conversation.lastMessage}
-                        </p>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))
-                )}
-              </SidebarMenu>
-            </ScrollArea>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-    </Sidebar>
+          </h3>
+          <ScrollArea className="h-[calc(100vh-200px)]">
+            <div className="space-y-2">
+              {conversationHistory.length === 0 ? (
+                <div className="p-4 text-center text-gray-500 text-sm">
+                  <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  Nenhuma conversa ainda
+                </div>
+              ) : (
+                conversationHistory.map((conversation) => (
+                  <button
+                    key={conversation.id}
+                    onClick={() => onLoadConversation(conversation)}
+                    className="w-full text-left p-3 rounded-lg hover:bg-[#2a2a2a] transition-colors group"
+                  >
+                    <div className="flex items-center gap-2 w-full mb-1">
+                      <span className="text-sm">{getAgentIcon(conversation.agentId)}</span>
+                      <span className="text-xs text-gray-400 bg-gray-700 px-2 py-0.5 rounded-full">
+                        {getAgentName(conversation.agentId)}
+                      </span>
+                      <span className="text-xs text-gray-500 ml-auto">
+                        {formatTimestamp(conversation.timestamp)}
+                      </span>
+                    </div>
+                    <h4 className="text-sm font-medium text-gray-200 truncate w-full text-left">
+                      {conversation.title}
+                    </h4>
+                    <p className="text-xs text-gray-500 truncate w-full text-left mt-1">
+                      {conversation.lastMessage}
+                    </p>
+                  </button>
+                ))
+              )}
+            </div>
+          </ScrollArea>
+        </div>
+      </div>
+    </div>
   );
 }
