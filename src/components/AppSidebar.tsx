@@ -38,12 +38,11 @@ export function AppSidebar({
     } else if (days === 1) {
       return 'Ontem';
     } else if (days < 7) {
-      return `${days} dias atrás`;
+      return `${days}d`;
     } else {
       return timestamp.toLocaleDateString('pt-BR', { 
         day: '2-digit', 
-        month: '2-digit',
-        year: '2-digit'
+        month: '2-digit'
       });
     }
   };
@@ -69,97 +68,112 @@ export function AppSidebar({
   };
 
   return (
-    <div className="h-full flex flex-col bg-[#1e1e1e] border-r border-[#2a2a2a]">
-      {/* Header */}
-      <div className="border-b border-[#2a2a2a] p-4">
+    <div className="h-full flex flex-col bg-[#1a1a1a] border-r border-[#2a2a2a]/50">
+      {/* Header minimalista */}
+      <div className="p-4 border-b border-[#2a2a2a]/30">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <History className="h-5 w-5 text-gray-400" />
-            <span className="font-semibold text-gray-200">Histórico</span>
+            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+            <span className="text-sm font-medium text-gray-300">Conversas</span>
           </div>
           {conversationHistory.length > 0 && (
             <Button
               variant="ghost"
               size="sm"
               onClick={onClearHistory}
-              className="text-gray-400 hover:text-red-400 hover:bg-red-900/20 p-1 h-auto"
+              className="text-gray-500 hover:text-red-400 hover:bg-red-900/10 p-1.5 h-auto rounded-md transition-colors"
               title="Limpar histórico"
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="h-3.5 w-3.5" />
             </Button>
           )}
         </div>
       </div>
       
-      {/* Content */}
+      {/* Content com scroll customizado */}
       <div className="flex-1 overflow-hidden">
-        <div className="p-4">
-          <h3 className="text-gray-400 text-xs uppercase tracking-wide mb-4">
-            Conversas Recentes ({conversationHistory.length})
-          </h3>
-          <ScrollArea className="h-[calc(100vh-200px)]">
-            <div className="space-y-2">
-              {conversationHistory.length === 0 ? (
-                <div className="p-4 text-center text-gray-500 text-sm">
-                  <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  Nenhuma conversa ainda
-                  <p className="text-xs mt-2 text-gray-600">
-                    Suas conversas aparecerão aqui
-                  </p>
+        <ScrollArea className="h-full">
+          <div className="p-3 space-y-1">
+            {conversationHistory.length === 0 ? (
+              <div className="p-6 text-center">
+                <div className="w-12 h-12 mx-auto mb-3 bg-[#2a2a2a]/30 rounded-full flex items-center justify-center">
+                  <MessageSquare className="h-5 w-5 text-gray-500" />
                 </div>
-              ) : (
-                conversationHistory.map((conversation) => (
-                  <div
-                    key={conversation.id}
-                    className="group relative bg-[#2a2a2a]/50 rounded-lg p-3 hover:bg-[#2a2a2a] transition-colors"
+                <p className="text-xs text-gray-500 leading-relaxed">
+                  Suas conversas<br />aparecerão aqui
+                </p>
+              </div>
+            ) : (
+              conversationHistory.map((conversation) => (
+                <div
+                  key={conversation.id}
+                  className="group relative rounded-lg hover:bg-[#2a2a2a]/20 transition-all duration-200"
+                >
+                  <button
+                    onClick={() => onLoadConversation(conversation)}
+                    className="w-full text-left p-3 rounded-lg"
                   >
-                    <button
-                      onClick={() => onLoadConversation(conversation)}
-                      className="w-full text-left"
-                    >
-                      <div className="flex items-center gap-2 w-full mb-2">
-                        <span className="text-sm">{getAgentIcon(conversation.agentId)}</span>
-                        <span className="text-xs text-gray-400 bg-gray-700 px-2 py-0.5 rounded-full">
+                    {/* Header da conversa */}
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs">{getAgentIcon(conversation.agentId)}</span>
+                        <span className="text-xs text-gray-400 px-1.5 py-0.5 bg-[#2a2a2a]/40 rounded text-[10px] font-medium">
                           {getAgentName(conversation.agentId)}
                         </span>
-                        <span className="text-xs text-gray-500 ml-auto">
-                          {formatTimestamp(conversation.timestamp)}
-                        </span>
                       </div>
-                      <h4 className="text-sm font-medium text-gray-200 truncate w-full text-left mb-1">
-                        {conversation.title}
-                      </h4>
-                      <p className="text-xs text-gray-500 truncate w-full text-left">
-                        {conversation.lastMessage}
-                      </p>
-                      <div className="flex items-center justify-between mt-2">
-                        <span className="text-xs text-gray-600">
-                          {conversation.messages.length} mensagens
-                        </span>
-                        <span className="text-xs text-gray-600 font-mono">
-                          {conversation.sessionId.slice(-6)}
-                        </span>
-                      </div>
-                    </button>
+                      <span className="text-xs text-gray-600 font-mono">
+                        {formatTimestamp(conversation.timestamp)}
+                      </span>
+                    </div>
                     
-                    {/* Botão de deletar */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDeleteConversation(conversation.id);
-                      }}
-                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-red-900/20 rounded text-gray-400 hover:text-red-400"
-                      title="Deletar conversa"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                ))
-              )}
-            </div>
-          </ScrollArea>
-        </div>
+                    {/* Título da conversa */}
+                    <h4 className="text-sm text-gray-200 font-medium mb-1 line-clamp-1">
+                      {conversation.title}
+                    </h4>
+                    
+                    {/* Última mensagem */}
+                    <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed mb-2">
+                      {conversation.lastMessage}
+                    </p>
+                    
+                    {/* Footer com informações */}
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-gray-600 flex items-center gap-1">
+                        <div className="w-1 h-1 bg-gray-600 rounded-full"></div>
+                        {conversation.messages.length} msgs
+                      </span>
+                      <span className="text-xs text-gray-600 font-mono opacity-60">
+                        #{conversation.sessionId.slice(-4)}
+                      </span>
+                    </div>
+                  </button>
+                  
+                  {/* Botão de deletar minimalista */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeleteConversation(conversation.id);
+                    }}
+                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-all duration-200 p-1 hover:bg-red-900/20 rounded text-gray-500 hover:text-red-400"
+                    title="Deletar conversa"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        </ScrollArea>
       </div>
+      
+      {/* Footer minimalista */}
+      {conversationHistory.length > 0 && (
+        <div className="p-3 border-t border-[#2a2a2a]/30">
+          <div className="text-xs text-gray-600 text-center">
+            {conversationHistory.length} conversa{conversationHistory.length !== 1 ? 's' : ''}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

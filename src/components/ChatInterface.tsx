@@ -387,9 +387,9 @@ const ChatInterface = () => {
 
   return (
     <div className="min-h-screen flex w-full bg-[#1e1e1e]">
-      {/* Sidebar - sempre renderizado */}
+      {/* Sidebar minimalista */}
       <div className={`
-        fixed inset-y-0 left-0 z-50 w-80 bg-[#1e1e1e] border-r border-[#2a2a2a] transform transition-transform duration-300 ease-in-out
+        fixed inset-y-0 left-0 z-50 w-80 transform transition-transform duration-300 ease-in-out
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         md:relative md:translate-x-0 md:w-80
         ${sidebarOpen ? 'md:block' : 'md:hidden'}
@@ -406,66 +406,68 @@ const ChatInterface = () => {
       {/* Overlay para mobile */}
       {sidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+          className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Conteúdo principal */}
       <div className="flex-1 flex flex-col min-h-screen">
-        {/* Header */}
-        <header className="p-4 border-b border-[#2a2a2a] flex justify-between items-center bg-[#1e1e1e] relative z-30">
-          <div className="flex items-center gap-2">
-            {/* Botão de histórico */}
+        {/* Header minimalista */}
+        <header className="p-4 border-b border-[#2a2a2a]/50 flex justify-between items-center bg-[#1e1e1e] relative z-30">
+          <div className="flex items-center gap-3">
+            {/* Botão de histórico minimalista */}
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="text-gray-400 hover:text-white hover:bg-[#2a2a2a] flex items-center gap-2"
+              className="text-gray-400 hover:text-white hover:bg-[#2a2a2a]/50 flex items-center gap-2 px-3 py-2 rounded-lg transition-all"
             >
               <History className="h-4 w-4" />
-              <span className="hidden sm:inline">Histórico</span>
+              <span className="hidden sm:inline text-sm">Conversas</span>
             </Button>
             
-            {/* Botão voltar apenas quando agente está selecionado */}
+            {/* Botão voltar */}
             {selectedAgent && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleBackToAgents}
-                className="text-gray-400 hover:text-white hover:bg-[#2a2a2a]"
+                className="text-gray-400 hover:text-white hover:bg-[#2a2a2a]/50 px-3 py-2 rounded-lg transition-all"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Voltar
+                <span className="text-sm">Voltar</span>
               </Button>
             )}
 
-            {/* Botão para nova conversa quando um agente está selecionado */}
+            {/* Botão nova conversa */}
             {selectedAgent && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => startNewConversation(selectedAgent)}
-                className="text-gray-400 hover:text-white hover:bg-[#2a2a2a] ml-2"
+                className="text-gray-400 hover:text-blue-400 hover:bg-blue-900/10 px-3 py-2 rounded-lg transition-all border border-[#2a2a2a]/50 hover:border-blue-500/30"
               >
-                Nova Conversa
+                <span className="text-sm">Nova Conversa</span>
               </Button>
             )}
           </div>
           
-          {/* Nome do agente e Session ID quando selecionado */}
+          {/* Info do agente */}
           {selectedAgent && (
-            <div className="text-gray-400 text-sm flex items-center gap-2">
-              <span className="text-lg">
-                {agentsData.find(a => a.id === selectedAgent)?.icon}
-              </span>
-              <div className="hidden sm:flex sm:flex-col sm:items-end">
-                <span>
-                  {agentsData.find(a => a.id === selectedAgent)?.title}
+            <div className="text-gray-400 text-sm flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">
+                  {agentsData.find(a => a.id === selectedAgent)?.icon}
                 </span>
-                <span className="text-xs text-gray-500">
-                  ID: {currentSessionId?.slice(-8)}
-                </span>
+                <div className="hidden sm:flex sm:flex-col">
+                  <span className="text-gray-300 font-medium">
+                    {agentsData.find(a => a.id === selectedAgent)?.title}
+                  </span>
+                  <span className="text-xs text-gray-500 font-mono">
+                    #{currentSessionId?.slice(-6)}
+                  </span>
+                </div>
               </div>
             </div>
           )}
