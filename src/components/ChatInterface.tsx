@@ -148,6 +148,58 @@ const ChatInterface = () => {
     setSidebarOpen(false);
   };
 
+  // Função para extrair a resposta do webhook baseado no formato retornado
+  const extractWebhookResponse = (data: any): string => {
+    console.log('Dados recebidos do webhook:', data);
+    
+    // Se for um array, pegar o primeiro item
+    if (Array.isArray(data) && data.length > 0) {
+      const firstItem = data[0];
+      
+      // Verificar se tem a propriedade 'output'
+      if (firstItem.output) {
+        return firstItem.output;
+      }
+      
+      // Verificar outras propriedades possíveis
+      if (firstItem.response) {
+        return firstItem.response;
+      }
+      
+      if (firstItem.message) {
+        return firstItem.message;
+      }
+      
+      // Se for string diretamente
+      if (typeof firstItem === 'string') {
+        return firstItem;
+      }
+    }
+    
+    // Se não for array, verificar propriedades diretamente
+    if (data && typeof data === 'object') {
+      if (data.output) {
+        return data.output;
+      }
+      
+      if (data.response) {
+        return data.response;
+      }
+      
+      if (data.message) {
+        return data.message;
+      }
+    }
+    
+    // Se for string diretamente
+    if (typeof data === 'string') {
+      return data;
+    }
+    
+    // Fallback: tentar converter para string
+    return JSON.stringify(data);
+  };
+
   const handleSendMessage = async (message: string) => {
     if (!selectedAgent) return;
 
@@ -189,11 +241,17 @@ const ChatInterface = () => {
       
       if (response.ok) {
         const data = await response.json();
-        console.log('Resposta do n8n:', data);
-        agentResponse = data.response || data.message || `${selectedAgentData.title}: Obrigado pela sua mensagem "${message}". Como posso ajudá-lo hoje?`;
+        console.log('Resposta completa do n8n:', data);
+        
+        // Usar a nova função para extrair a resposta
+        agentResponse = extractWebhookResponse(data);
+        
+        console.log('Resposta extraída:', agentResponse);
       } else {
         console.error('Erro na resposta do webhook:', response.status, response.statusText);
-        agentResponse = `${selectedAgentData.title}: Obrigado pela sua mensagem "${message}". Como posso ajudá-lo hoje?`;
+        const errorText = await response.text();
+        console.error('Texto do erro:', errorText);
+        agentResponse = `Erro ao processar mensagem. Status: ${response.status}`;
       }
 
       const agentMessage: Message = {
