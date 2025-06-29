@@ -22,8 +22,8 @@ const ChatArea: React.FC<ChatAreaProps> = ({ messages, agentNumber, onSendMessag
 
   return (
     <div className="flex flex-col h-full">
-      {/* Área de mensagens */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      {/* Área de mensagens com scroll customizado */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 chat-scroll">
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center text-gray-500">

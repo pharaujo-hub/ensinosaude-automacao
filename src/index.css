@@ -96,6 +96,35 @@
     background-color: rgba(107, 114, 128, 0.5);
   }
 
+  /* Scroll customizado para o chat - MINIMALISTA */
+  .chat-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(75, 85, 99, 0.2) transparent;
+  }
+  
+  .chat-scroll::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .chat-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .chat-scroll::-webkit-scrollbar-thumb {
+    background-color: rgba(75, 85, 99, 0.2);
+    border-radius: 3px;
+    border: 1px solid transparent;
+  }
+  
+  .chat-scroll::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(75, 85, 99, 0.4);
+  }
+
+  /* Scroll ainda mais sutil quando não está sendo usado */
+  .chat-scroll:not(:hover)::-webkit-scrollbar-thumb {
+    background-color: rgba(75, 85, 99, 0.1);
+  }
+
   /* Utilitários para truncar texto */
   .line-clamp-1 {
     overflow: hidden;
