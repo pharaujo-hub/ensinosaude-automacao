@@ -1,16 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { AppSidebar } from './AppSidebar';
 import AgentButton from './AgentButton';
 import ChatArea from './ChatArea';
 import { Button } from '@/components/ui/button';
-import { History, ArrowLeft } from 'lucide-react';
+import { History, ArrowLeft, Trash2 } from 'lucide-react';
 
 export interface Message {
   id: string;
   content: string;
   sender: 'user' | 'agent';
   timestamp: Date;
+}
+
+interface ConversationHistoryItem {
+  id: string;
+  title: string;
+  agentId: number;
+  lastMessage: string;
+  timestamp: Date;
+  messages: Message[];
+  sessionId: string;
 }
 
 interface AgentData {
@@ -30,14 +40,8 @@ const ChatInterface = () => {
     3: [],
     4: []
   });
-  const [conversationHistory, setConversationHistory] = useState<Array<{
-    id: string;
-    title: string;
-    agentId: number;
-    lastMessage: string;
-    timestamp: Date;
-    messages: Message[];
-  }>>([]);
+  const [conversationHistory, setConversationHistory] = useState<ConversationHistoryItem[]>([]);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   
   // Estado para armazenar os IDs de sessão únicos para cada agente
   const [sessionIds, setSessionIds] = useState<Record<number, string>>({});
@@ -73,6 +77,35 @@ const ChatInterface = () => {
     }
   ];
 
+  // Carregar histórico do localStorage quando o componente monta
+  useEffect(() => {
+    const savedHistory = localStorage.getItem('chatHistory');
+    if (savedHistory) {
+      try {
+        const parsedHistory = JSON.parse(savedHistory);
+        // Converter strings de data de volta para objetos Date
+        const historyWithDates = parsedHistory.map((item: any) => ({
+          ...item,
+          timestamp: new Date(item.timestamp),
+          messages: item.messages.map((msg: any) => ({
+            ...msg,
+            timestamp: new Date(msg.timestamp)
+          }))
+        }));
+        setConversationHistory(historyWithDates);
+      } catch (error) {
+        console.error('Erro ao carregar histórico:', error);
+      }
+    }
+  }, []);
+
+  // Salvar histórico no localStorage sempre que ele mudar
+  useEffect(() => {
+    if (conversationHistory.length > 0) {
+      localStorage.setItem('chatHistory', JSON.stringify(conversationHistory));
+    }
+  }, [conversationHistory]);
+
   // Função para gerar um ID único de sessão
   const generateSessionId = () => {
     return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -94,11 +127,13 @@ const ChatInterface = () => {
   const handleAgentSelect = (agentNumber: number) => {
     setSelectedAgent(agentNumber);
     // Garantir que existe um session ID para este agente
-    getSessionId(agentNumber);
+    const sessionId = getSessionId(agentNumber);
+    setCurrentSessionId(sessionId);
   };
 
   const handleBackToAgents = () => {
     setSelectedAgent(null);
+    setCurrentSessionId(null);
   };
 
   // Função para iniciar uma nova conversa (gera novo session ID)
@@ -108,6 +143,7 @@ const ChatInterface = () => {
       ...prev,
       [agentId]: newSessionId
     }));
+    setCurrentSessionId(newSessionId);
     
     // Limpar mensagens da conversa atual
     setConversations(prev => ({
@@ -116,46 +152,79 @@ const ChatInterface = () => {
     }));
   };
 
-  const saveConversation = (messages: Message[], agentId: number) => {
+  const saveConversation = (messages: Message[], agentId: number, sessionId: string) => {
     if (messages.length === 0) return;
     
-    const conversationId = `${agentId}-${Date.now()}`;
+    const conversationId = `${agentId}-${sessionId}`;
     const lastMessage = messages[messages.length - 1];
-    const title = messages[0]?.content.substring(0, 30) + '...' || 'Nova conversa';
+    const firstUserMessage = messages.find(msg => msg.sender === 'user');
+    const title = firstUserMessage ? 
+      (firstUserMessage.content.length > 30 ? 
+        firstUserMessage.content.substring(0, 30) + '...' : 
+        firstUserMessage.content) : 
+      'Nova conversa';
     
-    const newConversation = {
+    const newConversation: ConversationHistoryItem = {
       id: conversationId,
       title,
       agentId,
-      lastMessage: lastMessage.content.substring(0, 50) + '...',
+      lastMessage: lastMessage.content.length > 50 ? 
+        lastMessage.content.substring(0, 50) + '...' : 
+        lastMessage.content,
       timestamp: new Date(),
-      messages: [...messages]
+      messages: [...messages],
+      sessionId
     };
 
-    setConversationHistory(prev => [newConversation, ...prev].slice(0, 20));
+    setConversationHistory(prev => {
+      // Verificar se já existe uma conversa com este sessionId
+      const existingIndex = prev.findIndex(conv => conv.sessionId === sessionId);
+      
+      if (existingIndex >= 0) {
+        // Atualizar conversa existente
+        const updated = [...prev];
+        updated[existingIndex] = newConversation;
+        return updated;
+      } else {
+        // Adicionar nova conversa
+        return [newConversation, ...prev].slice(0, 50); // Limitar a 50 conversas
+      }
+    });
   };
 
-  const loadConversation = (conversation: any) => {
+  const loadConversation = (conversation: ConversationHistoryItem) => {
     setSelectedAgent(conversation.agentId);
+    setCurrentSessionId(conversation.sessionId);
+    
+    // Carregar as mensagens da conversa
     setConversations(prev => ({
       ...prev,
       [conversation.agentId]: conversation.messages
     }));
     
-    // Gerar novo session ID para a conversa carregada
-    startNewConversation(conversation.agentId);
+    // Definir o sessionId para este agente
+    setSessionIds(prev => ({
+      ...prev,
+      [conversation.agentId]: conversation.sessionId
+    }));
     
     setSidebarOpen(false);
   };
 
+  const clearHistory = () => {
+    setConversationHistory([]);
+    localStorage.removeItem('chatHistory');
+  };
+
+  const deleteConversation = (conversationId: string) => {
+    setConversationHistory(prev => prev.filter(conv => conv.id !== conversationId));
+  };
+
   const handleSendMessage = async (message: string): Promise<void> => {
-    if (!selectedAgent) return;
+    if (!selectedAgent || !currentSessionId) return;
 
     const selectedAgentData = agentsData.find(agent => agent.id === selectedAgent);
     if (!selectedAgentData) return;
-
-    // Obter o session ID para este agente
-    const sessionId = getSessionId(selectedAgent);
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -164,15 +233,17 @@ const ChatInterface = () => {
       timestamp: new Date()
     };
 
+    const updatedMessagesWithUser = [...conversations[selectedAgent], userMessage];
+    
     setConversations(prev => ({
       ...prev,
-      [selectedAgent]: [...prev[selectedAgent], userMessage]
+      [selectedAgent]: updatedMessagesWithUser
     }));
 
     try {
       console.log(`Enviando mensagem para ${selectedAgentData.title}:`, message);
       console.log(`URL do webhook: ${selectedAgentData.webhookUrl}`);
-      console.log(`Session ID: ${sessionId}`);
+      console.log(`Session ID: ${currentSessionId}`);
 
       const response = await fetch(selectedAgentData.webhookUrl, {
         method: 'POST',
@@ -181,7 +252,7 @@ const ChatInterface = () => {
         },
         body: JSON.stringify({ 
           message: message,
-          id: sessionId
+          id: currentSessionId
         })
       });
 
@@ -253,7 +324,7 @@ const ChatInterface = () => {
               },
               body: JSON.stringify({ 
                 message: message,
-                id: sessionId
+                id: currentSessionId
               })
             });
             
@@ -283,14 +354,16 @@ const ChatInterface = () => {
         timestamp: new Date()
       };
 
-      const updatedMessages = [...conversations[selectedAgent], userMessage, agentMessage];
+      const finalMessages = [...updatedMessagesWithUser, agentMessage];
       
       setConversations(prev => ({
         ...prev,
-        [selectedAgent]: updatedMessages
+        [selectedAgent]: finalMessages
       }));
 
-      saveConversation(updatedMessages, selectedAgent);
+      // Salvar conversa com o sessionId atual
+      saveConversation(finalMessages, selectedAgent, currentSessionId);
+      
     } catch (error) {
       console.error('Erro ao enviar mensagem para o webhook:', error);
       
@@ -301,14 +374,14 @@ const ChatInterface = () => {
         timestamp: new Date()
       };
 
-      const updatedMessages = [...conversations[selectedAgent], userMessage, errorMessage];
+      const finalMessages = [...updatedMessagesWithUser, errorMessage];
       
       setConversations(prev => ({
         ...prev,
-        [selectedAgent]: updatedMessages
+        [selectedAgent]: finalMessages
       }));
 
-      saveConversation(updatedMessages, selectedAgent);
+      saveConversation(finalMessages, selectedAgent, currentSessionId);
     }
   };
 
@@ -324,6 +397,8 @@ const ChatInterface = () => {
         <AppSidebar 
           conversationHistory={conversationHistory}
           onLoadConversation={loadConversation}
+          onDeleteConversation={deleteConversation}
+          onClearHistory={clearHistory}
           currentAgent={selectedAgent || 1}
         />
       </div>
@@ -389,7 +464,7 @@ const ChatInterface = () => {
                   {agentsData.find(a => a.id === selectedAgent)?.title}
                 </span>
                 <span className="text-xs text-gray-500">
-                  ID: {sessionIds[selectedAgent]?.slice(-8)}
+                  ID: {currentSessionId?.slice(-8)}
                 </span>
               </div>
             </div>
