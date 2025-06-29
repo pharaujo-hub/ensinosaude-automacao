@@ -38,6 +38,9 @@ const ChatInterface = () => {
     timestamp: Date;
     messages: Message[];
   }>>([]);
+  
+  // Estado para armazenar os IDs de sessão únicos para cada agente
+  const [sessionIds, setSessionIds] = useState<Record<number, string>>({});
 
   const agentsData: AgentData[] = [
     {
@@ -66,16 +69,51 @@ const ChatInterface = () => {
       title: "Gerador de Criativos",
       description: "Desenvolve peças criativas inovadoras para campanhas publicitárias.",
       icon: "🎨",
-      webhookUrl: "https://n8n-n8n-start.u6yj1s.easypanel.host/webhook/gerador-criativos"
+      webhookUrl: "https://n8nwebhook.n8n-n8n-start.u81uve.easypanel.host/webhook/gerador-criativos"
     }
   ];
 
+  // Função para gerar um ID único de sessão
+  const generateSessionId = () => {
+    return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  };
+
+  // Função para obter ou criar um ID de sessão para um agente
+  const getSessionId = (agentId: number) => {
+    if (!sessionIds[agentId]) {
+      const newSessionId = generateSessionId();
+      setSessionIds(prev => ({
+        ...prev,
+        [agentId]: newSessionId
+      }));
+      return newSessionId;
+    }
+    return sessionIds[agentId];
+  };
+
   const handleAgentSelect = (agentNumber: number) => {
     setSelectedAgent(agentNumber);
+    // Garantir que existe um session ID para este agente
+    getSessionId(agentNumber);
   };
 
   const handleBackToAgents = () => {
     setSelectedAgent(null);
+  };
+
+  // Função para iniciar uma nova conversa (gera novo session ID)
+  const startNewConversation = (agentId: number) => {
+    const newSessionId = generateSessionId();
+    setSessionIds(prev => ({
+      ...prev,
+      [agentId]: newSessionId
+    }));
+    
+    // Limpar mensagens da conversa atual
+    setConversations(prev => ({
+      ...prev,
+      [agentId]: []
+    }));
   };
 
   const saveConversation = (messages: Message[], agentId: number) => {
@@ -103,6 +141,10 @@ const ChatInterface = () => {
       ...prev,
       [conversation.agentId]: conversation.messages
     }));
+    
+    // Gerar novo session ID para a conversa carregada
+    startNewConversation(conversation.agentId);
+    
     setSidebarOpen(false);
   };
 
@@ -111,6 +153,9 @@ const ChatInterface = () => {
 
     const selectedAgentData = agentsData.find(agent => agent.id === selectedAgent);
     if (!selectedAgentData) return;
+
+    // Obter o session ID para este agente
+    const sessionId = getSessionId(selectedAgent);
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -127,13 +172,17 @@ const ChatInterface = () => {
     try {
       console.log(`Enviando mensagem para ${selectedAgentData.title}:`, message);
       console.log(`URL do webhook: ${selectedAgentData.webhookUrl}`);
+      console.log(`Session ID: ${sessionId}`);
 
       const response = await fetch(selectedAgentData.webhookUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ message })
+        body: JSON.stringify({ 
+          message: message,
+          id: sessionId
+        })
       });
 
       let agentResponse = 'Desculpe, não consegui processar sua mensagem no momento.';
@@ -235,17 +284,34 @@ const ChatInterface = () => {
                 Voltar
               </Button>
             )}
+
+            {/* Botão para nova conversa quando um agente está selecionado */}
+            {selectedAgent && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => startNewConversation(selectedAgent)}
+                className="text-gray-400 hover:text-white hover:bg-[#2a2a2a] ml-2"
+              >
+                Nova Conversa
+              </Button>
+            )}
           </div>
           
-          {/* Nome do agente quando selecionado */}
+          {/* Nome do agente e Session ID quando selecionado */}
           {selectedAgent && (
             <div className="text-gray-400 text-sm flex items-center gap-2">
               <span className="text-lg">
                 {agentsData.find(a => a.id === selectedAgent)?.icon}
               </span>
-              <span className="hidden sm:inline">
-                {agentsData.find(a => a.id === selectedAgent)?.title}
-              </span>
+              <div className="hidden sm:flex sm:flex-col sm:items-end">
+                <span>
+                  {agentsData.find(a => a.id === selectedAgent)?.title}
+                </span>
+                <span className="text-xs text-gray-500">
+                  ID: {sessionIds[selectedAgent]?.slice(-8)}
+                </span>
+              </div>
             </div>
           )}
         </header>
