@@ -1,9 +1,8 @@
-
 import React, { useState, KeyboardEvent } from 'react';
 import { Send } from 'lucide-react';
 
 interface MessageInputProps {
-  onSendMessage: (message: string) => void;
+  onSendMessage: (message: string) => Promise<void>;
 }
 
 const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage }) => {
@@ -12,10 +11,17 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage }) => {
 
   const handleSend = async () => {
     if (message.trim() && !isLoading) {
+      const messageToSend = message.trim();
+      setMessage(''); // Limpa o campo imediatamente
       setIsLoading(true);
-      await onSendMessage(message.trim());
-      setMessage('');
-      setIsLoading(false);
+      
+      try {
+        await onSendMessage(messageToSend);
+      } catch (error) {
+        console.error('Erro ao enviar mensagem:', error);
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 

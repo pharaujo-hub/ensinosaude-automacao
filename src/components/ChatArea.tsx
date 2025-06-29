@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from 'react';
 import Message from './Message';
 import MessageInput from './MessageInput';
@@ -7,7 +6,7 @@ import { Message as MessageType } from './ChatInterface';
 interface ChatAreaProps {
   messages: MessageType[];
   agentNumber: number;
-  onSendMessage: (message: string) => void;
+  onSendMessage: (message: string) => Promise<void>;
 }
 
 const ChatArea: React.FC<ChatAreaProps> = ({ messages, agentNumber, onSendMessage }) => {

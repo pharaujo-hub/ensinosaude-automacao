@@ -148,7 +148,7 @@ const ChatInterface = () => {
     setSidebarOpen(false);
   };
 
-  const handleSendMessage = async (message: string) => {
+  const handleSendMessage = async (message: string): Promise<void> => {
     if (!selectedAgent) return;
 
     const selectedAgentData = agentsData.find(agent => agent.id === selectedAgent);
