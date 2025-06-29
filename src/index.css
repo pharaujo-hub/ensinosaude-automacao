@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -25,6 +24,16 @@
     --input: 55 55 55;
     --ring: 59 130 246;
     --radius: 1rem;
+    
+    /* Sidebar variables */
+    --sidebar-background: 30 30 30;
+    --sidebar-foreground: 245 245 245;
+    --sidebar-primary: 59 130 246;
+    --sidebar-primary-foreground: 255 255 255;
+    --sidebar-accent: 55 55 55;
+    --sidebar-accent-foreground: 245 245 245;
+    --sidebar-border: 55 55 55;
+    --sidebar-ring: 59 130 246;
   }
 
   * {

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { History, MessageSquare, Trash2 } from 'lucide-react';
 import {
@@ -11,7 +10,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -72,14 +70,11 @@ export function AppSidebar({ conversationHistory, onLoadConversation, currentAge
   };
 
   return (
-    <Sidebar className="border-r border-[#2a2a2a]">
+    <Sidebar className="border-r border-[#2a2a2a] bg-[#1e1e1e]">
       <SidebarHeader className="border-b border-[#2a2a2a] p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <History className="h-5 w-5 text-gray-400" />
-            <span className="font-semibold text-gray-200">Histórico</span>
-          </div>
-          <SidebarTrigger className="text-gray-400 hover:text-white" />
+        <div className="flex items-center gap-2">
+          <History className="h-5 w-5 text-gray-400" />
+          <span className="font-semibold text-gray-200">Histórico</span>
         </div>
       </SidebarHeader>
       
@@ -101,7 +96,7 @@ export function AppSidebar({ conversationHistory, onLoadConversation, currentAge
                     <SidebarMenuItem key={conversation.id}>
                       <SidebarMenuButton
                         onClick={() => onLoadConversation(conversation)}
-                        className="flex flex-col items-start p-3 h-auto hover:bg-[#2a2a2a] rounded-lg group"
+                        className="flex flex-col items-start p-3 h-auto hover:bg-[#2a2a2a] rounded-lg group w-full text-left"
                       >
                         <div className="flex items-center gap-2 w-full mb-1">
                           <span className="text-sm">{getAgentIcon(conversation.agentId)}</span>

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { AppSidebar } from './AppSidebar';
@@ -197,14 +196,15 @@ const ChatInterface = () => {
             {/* Header com botões reorganizados */}
             <header className="p-4 border-b border-[#2a2a2a] flex justify-between items-center">
               <div className="flex items-center gap-2">
-                {/* Botão de histórico sempre visível, apenas com ícone */}
+                {/* Botão de histórico sempre visível */}
                 <Button
                   variant="ghost"
-                  size="icon"
+                  size="sm"
                   onClick={() => setSidebarOpen(!sidebarOpen)}
-                  className="text-gray-400 hover:text-white hover:bg-[#2a2a2a] h-9 w-9"
+                  className="text-gray-400 hover:text-white hover:bg-[#2a2a2a] flex items-center gap-2"
                 >
                   <History className="h-4 w-4" />
+                  <span className="hidden sm:inline">Histórico</span>
                 </Button>
                 
                 {/* Botão voltar apenas quando agente está selecionado */}
