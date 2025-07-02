@@ -45,9 +45,9 @@ const AgentButton: React.FC<AgentButtonProps> = ({
         </p>
       </div>
       
-      {/* Footer fixo na parte inferior */}
-      <div className="flex justify-between items-center mt-4 pt-2">
-        <span className={`text-xs px-3 py-1 rounded-full font-medium ${
+      {/* Footer fixo na parte inferior com alinhamento vertical correto */}
+      <div className="flex justify-between items-center mt-4">
+        <span className={`text-xs px-3 py-1.5 rounded-full font-medium inline-flex items-center ${
           isSelected 
             ? 'bg-blue-500/30 text-blue-100' 
             : 'bg-gray-700 text-gray-400'
@@ -55,7 +55,7 @@ const AgentButton: React.FC<AgentButtonProps> = ({
           Agente {agentNumber}
         </span>
         {isSelected && (
-          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse flex-shrink-0"></div>
         )}
       </div>
     </button>
