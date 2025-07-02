@@ -34,20 +34,19 @@ const AgentButton: React.FC<AgentButtonProps> = ({
         transform hover:scale-105
       `}
     >
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <div className="flex items-center gap-3 mb-2">
-            <span className="text-2xl">{icon}</span>
-            <h3 className="font-semibold text-lg">{title}</h3>
-          </div>
-          <p className={`text-sm leading-relaxed ${isSelected ? 'text-blue-100' : 'text-gray-400'}`}>
-            {description}
-          </p>
+      {/* Conteúdo principal */}
+      <div className="flex-1">
+        <div className="flex items-center gap-3 mb-2">
+          <span className="text-2xl">{icon}</span>
+          <h3 className="font-semibold text-lg">{title}</h3>
         </div>
+        <p className={`text-sm leading-relaxed ${isSelected ? 'text-blue-100' : 'text-gray-400'}`}>
+          {description}
+        </p>
       </div>
       
-      {/* Footer com alinhamento consistente */}
-      <div className="flex justify-between items-center mt-4">
+      {/* Footer fixo na parte inferior */}
+      <div className="flex justify-between items-center mt-4 pt-2">
         <span className={`text-xs px-3 py-1 rounded-full font-medium ${
           isSelected 
             ? 'bg-blue-500/30 text-blue-100' 
