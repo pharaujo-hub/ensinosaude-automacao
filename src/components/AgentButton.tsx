@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 interface AgentButtonProps {
@@ -47,8 +46,9 @@ const AgentButton: React.FC<AgentButtonProps> = ({
         </div>
       </div>
       
+      {/* Footer com alinhamento consistente */}
       <div className="flex justify-between items-center mt-4">
-        <span className={`text-xs px-3 py-1 rounded-full ${
+        <span className={`text-xs px-3 py-1 rounded-full font-medium ${
           isSelected 
             ? 'bg-blue-500/30 text-blue-100' 
             : 'bg-gray-700 text-gray-400'
